@@ -5,7 +5,7 @@ with open('.secret.key') as f:
 
 gmaps = googlemaps.Client(key=api_key)
 
-def walk(dest_list):
+def walk(dest_list, verbose=False):
     """given a list of places to visit, return the walking dist & time"""
 
     if len(dest_list) > 10:
@@ -21,13 +21,15 @@ def walk(dest_list):
         start, stop, mode="walking", waypoints=waypoints, optimize_waypoints=True
     )
     
-    dist = 0
-    time = 0
-    for leg in directions_result[0]['legs']:
-        td = leg['distance']['value']
-        tt = leg['duration']['value']
-        print(f'+{td} m --and-- +{round(tt/60, 2)} min')
-        dist += td
-        time += tt
-    print(f'total dist: {dist} m \nest time: {round(time / 60, 1)} min')
+    if verbose:
+        dist = 0
+        time = 0
+        for leg in directions_result[0]['legs']:
+            td = leg['distance']['value']
+            tt = leg['duration']['value']
+            print(f'+{td} m --and-- +{round(tt/60, 2)} min')
+            dist += td
+            time += tt
+        print(f'total dist: {dist} m \nest time: {round(time / 60, 1)} min')
+        
     return directions_result
