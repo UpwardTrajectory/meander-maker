@@ -5,6 +5,12 @@ with open('.secret.key') as f:
 
 gmaps = googlemaps.Client(key=api_key)
 
+def get_topic():
+    """
+    Let the user choose which topic to build a walk around.
+    """
+    return input('What theme walk would you like to explore today?')
+
 def walk(dest_list, verbose=False):
     """given a list of places to visit, return the walking dist & time"""
 
@@ -33,3 +39,8 @@ def walk(dest_list, verbose=False):
         print(f'total dist: {dist} m \nest time: {round(time / 60, 1)} min')
         
     return directions_result
+
+
+
+def near_neighbor(dest_list):
+    gmaps.
