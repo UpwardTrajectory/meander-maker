@@ -25,7 +25,7 @@ It's time for an urban themed walk! Perhaps you'd like to efficiently visit the 
  * Locate the 'Nearest Neighbors' that meet your search criteria
  * Build the shortest walking path between stops
  * You *can* already do this in Google Maps, but it this process requires knowing the names of the individual stops AND the order you would like to traverse them in before the route can be generated. Meander-Maker automates all of that.
-![example.png](https://github.com/UpwardTrajectory/meander-maker/blob/build_mvp/example.png?raw=true)
+![example.png](https://github.com/UpwardTrajectory/meander-maker/blob/master/example.png?raw=true)
  
 ### To Do:
  * Render the map w/ path overlay
