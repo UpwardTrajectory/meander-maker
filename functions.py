@@ -11,6 +11,21 @@ def get_topic():
     """
     return input('What theme walk would you like to explore today?')
 
+
+def get_loc(current=True):
+    """
+    current = True: Attempt to determine the user location 
+    current = False: Ask the user for a starting location.
+    """
+    if current is True:
+        output = gmaps.geolocate()['location']
+    else:
+        query = input('Where would you like to start?')
+        place_id = gmaps.find_place(query, input_type='textquery')['candidates'][0]['place_id']
+        output = gmaps.place('ChIJydSuSkkUkFQRsqhB-cEtYnw')['result']['geometry']['location']
+    return output
+
+
 def walk(dest_list, verbose=False):
     """given a list of places to visit, return the walking dist & time"""
 
@@ -40,7 +55,3 @@ def walk(dest_list, verbose=False):
         
     return directions_result
 
-
-
-def near_neighbor(dest_list):
-    gmaps.
