@@ -5,29 +5,41 @@ with open('.secret.key') as f:
 
 gmaps = googlemaps.Client(key=api_key)
 
+
 def get_topic():
-    """
-    Let the user choose which topic to build a walk around.
-    """
+    """Let the user choose which topic to build a walk around."""
     return input('What theme walk would you like to explore today?')
 
 
 def get_loc(current=True):
     """
+    Initialize a location, based on either inferred data from cell towers,
+    WiFi, or GPS data, or a simple query to the user.
+    
     current = True: Attempt to determine the user location 
     current = False: Ask the user for a starting location.
     """
+    output=None
     if current is True:
         output = gmaps.geolocate()['location']
     else:
         query = input('Where would you like to start?')
-        place_id = gmaps.find_place(query, input_type='textquery')['candidates'][0]['place_id']
-        output = gmaps.place('ChIJydSuSkkUkFQRsqhB-cEtYnw')['result']['geometry']['location']
+        if query.count(',') == 1 and query.translate({ord(i):None for i in '- ,:.'}).isnumeric():
+            output = {}
+            output['lat'], output['lng'] = [float(x) for x in query.split(',')]
+        else:
+            place_id = gmaps.find_place(query, input_type='textquery')['candidates'][0]['place_id']
+            output = gmaps.place(place_id)['result']['geometry']['location']
     return output
 
 
+def build_list(loc, topic):
+    gmaps.places_nearby()
+    pass
+    
+
 def walk(dest_list, verbose=False):
-    """given a list of places to visit, return the walking dist & time"""
+    """Given a list of places to visit, return the walking dist & time"""
 
     if len(dest_list) > 10:
         return "There is a maximum of 10 stops per adventure."
