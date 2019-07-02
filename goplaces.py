@@ -48,16 +48,25 @@ def get_topic():
     return input('What theme would you like to explore today?')
 
 
+def populate_inputs(loc=None, topic=None):
+    """
+    If either location or topic don't exist yet, query the user to populate
+    those inputs.
+    """
+    if loc is None:
+        loc = get_loc(False)
+    if topic is None:
+        topic = get_topic()
+    return loc, topic
+
+
 def build_list(loc=None, topic=None, n=10):
     """
     --DEPRECIATED: USE build_df() INSTEAD--
     Given a location, topic, and number of stops, build a list (increasing
     dist from start location) of places to visit.
     """
-    if loc is None:
-        loc = get_loc(False)
-    if topic is None:
-        topic = get_topic()
+    loc, topic = populate_inputs(loc, topic)
     output = gmaps.places_nearby(
         loc, 
         keyword=topic, 
@@ -77,14 +86,14 @@ def lat_lng_list(one_way_json):
     return [x['geometry']['location'] for x in one_way_json]
 
 
-def cluster(df):
+def cluster(df, min_size=3):
     """
     Use HDBSCAN -- Hierarchical Density-Based Spatial Clustering 
     of Applications with Noise -- to find the best clusters for
     the meander.
     """
     clusterer = HDBSCAN(
-        min_cluster_size=3, 
+        min_cluster_size=min_size, 
         min_samples=3, 
         metric='haversine', 
         allow_single_cluster=True
@@ -94,15 +103,12 @@ def cluster(df):
     return df.loc[df['label'] >= 0].sort_values('label').reset_index(drop=True)
 
 
-def build_df(loc=None, topic=None, n=50, naive=False):
+def build_df(loc=None, topic=None, n=50):
     """
-    Given a location, topic, and number of stops, build a df (increasing
-    dist from start location) of places to visit.
+    Given a location, topic, and number of stops, build a df with cluster labels
+    (increasing dist from start location) of places to visit.
     """
-    if loc is None:
-        loc = get_loc(current=False)
-    if topic is None:
-        topic = get_topic()
+    loc, topic = populate_inputs(loc, topic)
 
     output = gmaps.places_nearby(
         loc, 
@@ -112,14 +118,14 @@ def build_df(loc=None, topic=None, n=50, naive=False):
     df = pd.DataFrame(
         [
             {'name': x['name'], 
+             'rating': x['rating'],
+             'user_ratings_total': x['user_ratings_total'],
              'lat': x['geometry']['location']['lat'], 
              'lng': x['geometry']['location']['lng']} 
         for x in output['results'][:n]
         ]
     )
-    if naive is False:
-        df = cluster(df)
-    return df
+    return cluster(df)
 
 
 def meander(df, mode='walking', verbose=False):
@@ -130,11 +136,8 @@ def meander(df, mode='walking', verbose=False):
     if verbose=True, also print out total meander dist & time.
     """
     try:
-        #print('made it to the try')
         df = df.loc[df['label'] == 0]
-        #print('and after the "label" column lookup')
     except Exception as e:
-        #print('here is the exception')
         print(e)
         if len(df) > 10:
             print("""There is a maximum of 10 stops per adventure,
@@ -146,25 +149,22 @@ def meander(df, mode='walking', verbose=False):
     stop = df[['lat', 'lng']].iloc[-1]
     wypnts = None
     if len(df) > 2:
-        wypnts = df[['lat', 'lng']].iloc[1:-1].to_json(orient='records')
-        print(f'waypoints: {wypnts}')
+        wypnts = df[['lat', 'lng']].iloc[1:-1].values.tolist()
 
     directions_result = gmaps.directions(
         start, stop, mode=mode,
         waypoints=wypnts, optimize_waypoints=True
     )
-
     if verbose:
         dist = 0
         time = 0
         for leg in directions_result[0]['legs']:
-            temp_dist = leg['distance']['value']
-            temp_time = leg['duration']['value']
-            print(f'+{temp_dist} m --and-- +{round(temp_time/60, 2)} min')
-            dist += temp_dist
-            time += temp_time
+            leg_dist = leg['distance']['value']
+            leg_time = leg['duration']['value']
+            print(f'+{leg_dist} m --and-- +{round(leg_time/60, 2)} min')
+            dist += leg_dist
+            time += leg_time
         print(f'total dist: {dist} m \nest time: {round(time / 60, 1)} min')
-
     return directions_result[0]
 
 
@@ -206,3 +206,36 @@ def html_builder(loc, meander, tab=False):
         webbrowser.open(url, new=2)
     return
 
+
+def haver_wrapper(row, loc):
+    """
+    Wrapper for haversine function that works on each row of a dataframe. 
+    Intenionally NOT vectorized b/c it works faster on small dataframes.
+    """
+    p1 = loc['lat'], loc['lng']
+    p2 = row['lat'], row['lng']
+    return haversine(p1, p2, unit='m')
+        
+
+def choose_cluster(df, loc):
+    """
+    Accepts a df from build_df() and chooses the optimal cluster to meander.
+    loc is the starting location of the search, which should be a dictionary of
+    the form: {'lat': 47.606269, 'lng': -122.334747}
+    """
+    scores = pd.DataFrame(
+        columns=['cluster', 'size', 'lat_avg', 'lon_avg', 'min_dist_to_loc']
+    )
+    for i in df['label'].unique():
+        cluster = df.loc[df['label'] == i, :]
+        cluster['dist_to_loc'] = df.apply(
+            lambda row: haver_wrapper(row, loc), axis=1)
+        display(cluster)
+        scores.loc[i] = [
+            i, 
+            len(cluster), 
+            cluster['lat'].mean(), 
+            cluster['lng'].mean(),
+            cluster['dist_to_loc'].min()
+        ]
+    return scores.set_index('cluster')
