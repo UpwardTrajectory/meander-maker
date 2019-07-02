@@ -16,13 +16,14 @@ gmaps = googlemaps.Client(key=api_key)
 def get_loc(current=True):
     """
     Initialize a location using one of two methods:
+    ----------------
     current = True:
         Use data from cell towers, WiFi, and GPS
     current = False:
         Ask the user for a starting location
-        This can be a string (search google maps)
+        This can be a string (search google maps, be specific)
         or a latitude-longitude coordinate
-    --------
+    ----------------
     returns a dictionary of the form:
     {'lat': 47.606269, 'lng': -122.334747}
     """
@@ -44,7 +45,7 @@ def get_loc(current=True):
 
 def get_topic():
     """Let the user choose which topic meander."""
-    return input('What theme walk would you like to explore today?')
+    return input('What theme would you like to explore today?')
 
 
 def build_list(loc=None, topic=None, n=10):
@@ -86,10 +87,11 @@ def cluster(df):
         min_cluster_size=3, 
         min_samples=3, 
         metric='haversine', 
-        allow_single_cluster=True)
+        allow_single_cluster=True
+    )
     clusterer.fit(df[['lat', 'lng']])
     df['label'] = clusterer.labels_
-    return df.loc[df['label'] >= 0].sort_values('label')
+    return df.loc[df['label'] >= 0].sort_values('label').reset_index(drop=True)
 
 
 def build_df(loc=None, topic=None, n=50, naive=False):
@@ -98,9 +100,10 @@ def build_df(loc=None, topic=None, n=50, naive=False):
     dist from start location) of places to visit.
     """
     if loc is None:
-        loc = get_loc(False)
+        loc = get_loc(current=False)
     if topic is None:
         topic = get_topic()
+
     output = gmaps.places_nearby(
         loc, 
         keyword=topic, 
@@ -119,28 +122,36 @@ def build_df(loc=None, topic=None, n=50, naive=False):
     return df
 
 
-def meander(dest_list, mode='walking', verbose=False):
+def meander(df, mode='walking', verbose=False):
     """
     Given a list of places to visit, return a JSON of the stops.
     mode: Specifies the mode of transport to use when calculating directions.
          {"driving", "walking", "bicycling", "transit"}
     if verbose=True, also print out total meander dist & time.
     """
-
-    if len(dest_list) > 10:
-        print("""There is a maximum of 10 stops per adventure,
-        trimming list down to 10.""")
-        dest_list = dest_list[:10]
-
-    start, stop = dest_list[0], dest_list[-1]
-
-    waypoints = None
-    if len(dest_list) > 2:
-        waypoints = dest_list[1:-1]
+    try:
+        #print('made it to the try')
+        df = df.loc[df['label'] == 0]
+        #print('and after the "label" column lookup')
+    except Exception as e:
+        #print('here is the exception')
+        print(e)
+        if len(df) > 10:
+            print("""There is a maximum of 10 stops per adventure,
+                    trimming list down to 10.""")
+            df = df[['lat', 'lng']][:10]
+    
+    display(df)
+    start = df[['lat', 'lng']].iloc[0]
+    stop = df[['lat', 'lng']].iloc[-1]
+    wypnts = None
+    if len(df) > 2:
+        wypnts = df[['lat', 'lng']].iloc[1:-1].to_json(orient='records')
+        print(f'waypoints: {wypnts}')
 
     directions_result = gmaps.directions(
         start, stop, mode=mode,
-        waypoints=waypoints, optimize_waypoints=True
+        waypoints=wypnts, optimize_waypoints=False
     )
 
     if verbose:
