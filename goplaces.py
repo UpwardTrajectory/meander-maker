@@ -151,7 +151,7 @@ def meander(df, mode='walking', verbose=False):
 
     directions_result = gmaps.directions(
         start, stop, mode=mode,
-        waypoints=wypnts, optimize_waypoints=False
+        waypoints=wypnts, optimize_waypoints=True
     )
 
     if verbose:
@@ -205,24 +205,4 @@ def html_builder(loc, meander, tab=False):
         url = 'file:///Users/dakaspar/flatiron/meander_maker/mymap.html'
         webbrowser.open(url, new=2)
     return
-
-
-def all_the_things(loc=None, topic=None):
-    """
-    ApiError: INVALID_REQUEST
-    ------????????????? not sure why
-    Combine getting topic, location, and then output an html
-    """
-    if loc is None:
-        loc = get_loc(False)
-    if topic is None:
-        topic = get_topic()
-        
-    one_way_json = build_list(loc, topic)
-    dest_list = lat_lng_list(one_way_json)
-    wlk = 'asdf'
-    return loc, walk(dest_list)
-    
-
-
 
