@@ -107,7 +107,7 @@ def cluster(df, min_size=3, allow_single_cluster=True):
     return output.sort_values('label').reset_index(drop=True)
 
 
-def build_df(loc=None, topic=None, n=50):
+def build_df(loc=None, topic=None, n=40):
     """
     Given a location, topic, and number of stops, build a df with cluster labels
     (increasing dist from start location) of places to visit.
@@ -119,6 +119,11 @@ def build_df(loc=None, topic=None, n=50):
         keyword=topic, 
         rank_by='distance',
     )
+    if 'next_page_token' in output.keys():
+        import time
+        time.sleep(2)
+        next_page = gmaps.places_nearby(page_token=output['next_page_token'])
+        output['results'].extend(query_result_next_page['results'])
     df = pd.DataFrame(
         [
             {'name': x['name'], 
@@ -270,7 +275,6 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         scores[i] = round(cluster_metric(cluster, loc), 4)
     
     best = max(scores, key=lambda k: scores[k])
-
     if verbose:
         display(scores)
         for cluster in poss_clusters.values():
