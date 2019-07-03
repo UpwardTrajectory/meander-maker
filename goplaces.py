@@ -89,7 +89,7 @@ def lat_lng_list(one_way_json):
     return [x['geometry']['location'] for x in one_way_json]
 
 
-def cluster(df, min_size=3):
+def cluster(df, min_size=3, allow_single_cluster=True):
     """
     Use HDBSCAN --
     (Hierarchical Density-Based Spatial Clustering of Applications with Noise)
@@ -99,11 +99,11 @@ def cluster(df, min_size=3):
         min_cluster_size=min_size, 
         min_samples=3, 
         metric='haversine', 
-        allow_single_cluster=True
+        allow_single_cluster=allow_single_cluster
     )
     clusterer.fit(df[['lat', 'lng']])
-    df['label'] = [str(x) for x in clusterer.labels_]
-    output = df.loc[df['label'] >= str(0)]
+    df['label'] = ['ABCDEFGHIJKLMN'[i] for i in clusterer.labels_]
+    output = df.loc[df['label'] >= 'A']
     return output.sort_values('label').reset_index(drop=True)
 
 
@@ -173,7 +173,7 @@ def mapbox(df):
     zoom = autozoom(df)
     output = px.scatter_mapbox(
         df, lat='lat', lon='lng', hover_name=['name', 'rating'], zoom=zoom,
-        color='rating', width=600, height=600
+        color='label', width=600, height=600
     )
     return output
 
@@ -236,37 +236,43 @@ def haver_wrapper(row, loc):
     p2 = row['lat'], row['lng']
     return haversine(p1, p2, unit='m')
         
+def cluster_metric(cluster, loc):
+    """
+    Evaluate which cluster is best. Goals are to:
+    MINIMIZE: dist to first stop & total distance between stops
+    MAXIMIZE: average rating & cluster size
+    """
+    size = len(cluster)
+    lat_avg = cluster['lat'].mean()
+    lng_avg = cluster['lng'].mean()
+    rating_avg = cluster['rating'].mean()
+    min_dist = cluster['dist_to_loc'].min()
+    max_dist = cluster['dist_to_loc'].max()
+    return 10**5 * size**1.2 * rating_avg / (min_dist * (max_dist - min_dist))
 
-def choose_cluster(df, loc):
+
+def choose_cluster(df, loc, mode='walking', verbose=False):
     """
     TODO: SettingWithCopyWarning still shows up
+          Scale the "internal walking dist" to depend on mode of transport
     ---------------------
     Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
     """
-    scores = pd.DataFrame(
-        columns=['cluster', 'size', 'lat_avg', 'lon_avg', 'rating_avg',
-                 'min_dist_to_loc']
-    )
+    scores = {}
     poss_clusters = {}
     for i in df['label'].unique():
         cluster = df.loc[df['label'] == i, :]
         cluster['dist_to_loc'] = df.apply(
             lambda row: haver_wrapper(row, loc), axis=1)
-        poss_clusters[str(i)] = cluster
-        scores.loc[i] = [
-            i, 
-            len(cluster), 
-            cluster['lat'].mean(), 
-            cluster['lng'].mean(),
-            cluster['rating'].mean(),
-            cluster['dist_to_loc'].min()
-        ]
-    grade = scores.set_index('cluster').copy()
-    grade['metric'] = (
-        100 * grade['size'] * grade['rating_avg'] / grade['min_dist_to_loc']
-    )
-    grade.sort_values('metric', ascending=False, inplace=True)
-    return poss_clusters[grade.iloc[0].name]
+        poss_clusters[i] = cluster
+        scores[i] = round(cluster_metric(cluster, loc), 4)
+    
+    best = max(scores, key=lambda k: scores[k])
 
+    if verbose:
+        display(scores)
+        for cluster in poss_clusters.values():
+            display(cluster)
+    return poss_clusters[best]
