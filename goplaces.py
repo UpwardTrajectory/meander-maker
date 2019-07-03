@@ -1,17 +1,20 @@
 import pandas as pd
 import numpy as np
+import ast
 import webbrowser
 import googlemaps
 import gmplot
 import polyline
+import plotly_express as px
 from haversine import haversine
 from hdbscan import HDBSCAN
 
-with open('.secret.key') as f:
-    api_key = f.read().strip()
+with open('.secret.key', 'r') as f:
+    api_keys = ast.literal_eval(f.read().strip())
 
-gmaps = googlemaps.Client(key=api_key)
-
+#plotly.offline.init_notebook_mode(connected=True)
+px.set_mapbox_access_token(api_keys['mapbox'])
+gmaps = googlemaps.Client(key=api_keys['googlemaps'])
 
 def get_loc(current=True):
     """
@@ -88,9 +91,9 @@ def lat_lng_list(one_way_json):
 
 def cluster(df, min_size=3):
     """
-    Use HDBSCAN -- Hierarchical Density-Based Spatial Clustering 
-    of Applications with Noise -- to find the best clusters for
-    the meander.
+    Use HDBSCAN --
+    (Hierarchical Density-Based Spatial Clustering of Applications with Noise)
+    to find the best clusters for the meander.
     """
     clusterer = HDBSCAN(
         min_cluster_size=min_size, 
@@ -99,8 +102,9 @@ def cluster(df, min_size=3):
         allow_single_cluster=True
     )
     clusterer.fit(df[['lat', 'lng']])
-    df['label'] = clusterer.labels_
-    return df.loc[df['label'] >= 0].sort_values('label').reset_index(drop=True)
+    df['label'] = [str(x) for x in clusterer.labels_]
+    output = df.loc[df['label'] >= str(0)]
+    return output.sort_values('label').reset_index(drop=True)
 
 
 def build_df(loc=None, topic=None, n=50):
@@ -128,23 +132,16 @@ def build_df(loc=None, topic=None, n=50):
     return cluster(df)
 
 
-def meander(df, mode='walking', verbose=False):
+def meander(df, loc=None, mode='walking', verbose=False):
     """
     Given a list of places to visit, return a JSON of the stops.
     mode: Specifies the mode of transport to use when calculating directions.
          {"driving", "walking", "bicycling", "transit"}
     if verbose=True, also print out total meander dist & time.
     """
-    try:
-        df = df.loc[df['label'] == 0]
-    except Exception as e:
-        print(e)
-        if len(df) > 10:
-            print("""There is a maximum of 10 stops per adventure,
-                    trimming list down to 10.""")
-            df = df[['lat', 'lng']][:10]
-    
-    display(df)
+    loc = populate_inputs(loc, False)[0]
+    df = choose_cluster(df, loc)[:10]
+
     start = df[['lat', 'lng']].iloc[0]
     stop = df[['lat', 'lng']].iloc[-1]
     wypnts = None
@@ -168,6 +165,19 @@ def meander(df, mode='walking', verbose=False):
     return directions_result[0]
 
 
+def mapbox(df):
+    """
+    Plot the locations from a df containing ['lat', 'lng', 'name'] in an
+    interactive window.
+    """
+    zoom = autozoom(df)
+    output = px.scatter_mapbox(
+        df, lat='lat', lon='lng', hover_name=['name', 'rating'], zoom=zoom,
+        color='rating', width=600, height=600
+    )
+    return output
+
+
 def autozoom(df, pix=1440):
     """
     Determine max dist in meters using Haversine Formula, then use that 
@@ -182,7 +192,7 @@ def autozoom(df, pix=1440):
     zoom_num = np.log2(
         156543.03392 * np.cos(np.radians(df['lat'].mean())) * pix / meters
     )
-    return int(zoom_num) - 1
+    return int(zoom_num) - 2
 
 
 def html_builder(loc, meander, tab=False):
@@ -196,8 +206,18 @@ def html_builder(loc, meander, tab=False):
     zoom = autozoom(df)
     
     gmapit = gmplot.GoogleMapPlotter(
-        loc['lat'], loc['lng'], zoom=zoom, apikey=api_key)
-    gmapit.scatter(df['lat'], df['lng'], '#f542a1', size=20, marker=False)
+        df['lat'].mean(), 
+        df['lng'].mean(), 
+        zoom=zoom, 
+        apikey=api_keys['googlemaps']
+    )
+    gmapit.scatter(
+        df['lat'], 
+        df['lng'], 
+        color='#f542a1', 
+        size=20, 
+        marker=False
+    )
     gmapit.plot(poly[:,0], poly[:,1])
     gmapit.draw("mymap.html")
     
@@ -219,23 +239,34 @@ def haver_wrapper(row, loc):
 
 def choose_cluster(df, loc):
     """
+    TODO: SettingWithCopyWarning still shows up
+    ---------------------
     Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
     """
     scores = pd.DataFrame(
-        columns=['cluster', 'size', 'lat_avg', 'lon_avg', 'min_dist_to_loc']
+        columns=['cluster', 'size', 'lat_avg', 'lon_avg', 'rating_avg',
+                 'min_dist_to_loc']
     )
+    poss_clusters = {}
     for i in df['label'].unique():
         cluster = df.loc[df['label'] == i, :]
         cluster['dist_to_loc'] = df.apply(
             lambda row: haver_wrapper(row, loc), axis=1)
-        display(cluster)
+        poss_clusters[str(i)] = cluster
         scores.loc[i] = [
             i, 
             len(cluster), 
             cluster['lat'].mean(), 
             cluster['lng'].mean(),
+            cluster['rating'].mean(),
             cluster['dist_to_loc'].min()
         ]
-    return scores.set_index('cluster')
+    grade = scores.set_index('cluster').copy()
+    grade['metric'] = (
+        100 * grade['size'] * grade['rating_avg'] / grade['min_dist_to_loc']
+    )
+    grade.sort_values('metric', ascending=False, inplace=True)
+    return poss_clusters[grade.iloc[0].name]
+
