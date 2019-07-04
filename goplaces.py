@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 import ast
 import webbrowser
 import googlemaps
@@ -35,7 +36,7 @@ def get_loc(current=True):
         output = gmaps.geolocate()['location']
     else:
         query = input('Where would you like to start?')
-        coord_test = query.translate({ord(i):None for i in '()[]- ,.:;'})
+        coord_test = query.translate({ord(i) : None for i in '{}()[]- ,.:;'})
         if (query.count(',') == 1 and coord_test.isnumeric()):
             coords = [float(x) for x in query.split(',')]
             output = {'lat' : coords[0], 'lng' : coords[1]}
@@ -47,7 +48,7 @@ def get_loc(current=True):
 
 
 def get_topic():
-    """Let the user choose which topic meander."""
+    """Let the user choose which topic to meander."""
     return input('What theme would you like to explore today?')
 
 
@@ -73,7 +74,7 @@ def build_list(loc=None, topic=None, n=10):
     output = gmaps.places_nearby(
         loc, 
         keyword=topic, 
-        rank_by='distance',
+        rank_by='distance'
     )
     return output['results'][:n]
 
@@ -89,7 +90,7 @@ def lat_lng_list(one_way_json):
     return [x['geometry']['location'] for x in one_way_json]
 
 
-def cluster(df, min_size=3, allow_single_cluster=True):
+def cluster(df, min_size=4, allow_single_cluster=True):
     """
     Use HDBSCAN --
     (Hierarchical Density-Based Spatial Clustering of Applications with Noise)
@@ -103,8 +104,7 @@ def cluster(df, min_size=3, allow_single_cluster=True):
     )
     clusterer.fit(df[['lat', 'lng']])
     df['label'] = ['ABCDEFGHIJKLMN'[i] for i in clusterer.labels_]
-    output = df.loc[df['label'] >= 'A']
-    return output.sort_values('label').reset_index(drop=True)
+    return df.sort_values('label').reset_index(drop=True)
 
 
 def build_df(loc=None, topic=None, n=40):
@@ -117,20 +117,21 @@ def build_df(loc=None, topic=None, n=40):
     output = gmaps.places_nearby(
         loc, 
         keyword=topic, 
-        rank_by='distance',
+        rank_by='distance'
     )
-    if 'next_page_token' in output.keys():
-        import time
+    while (len(output['results']) < n) and ('next_page_token' in output.keys()):
         time.sleep(2)
         next_page = gmaps.places_nearby(page_token=output['next_page_token'])
-        output['results'].extend(query_result_next_page['results'])
+        output['results'].extend(next_page['results'])
+
     df = pd.DataFrame(
         [
             {'name': x['name'], 
              'rating': x['rating'],
              'user_ratings_total': x['user_ratings_total'],
              'lat': x['geometry']['location']['lat'], 
-             'lng': x['geometry']['location']['lng']} 
+             'lng': x['geometry']['location']['lng']
+            } 
         for x in output['results'][:n]
         ]
     )
@@ -240,9 +241,12 @@ def haver_wrapper(row, loc):
     p1 = loc['lat'], loc['lng']
     p2 = row['lat'], row['lng']
     return haversine(p1, p2, unit='m')
-        
+
+
 def cluster_metric(cluster, loc):
     """
+    TODO: Fine tune to allow adjustment based on user preference
+    ---------------------
     Evaluate which cluster is best. Goals are to:
     MINIMIZE: dist to first stop & total distance between stops
     MAXIMIZE: average rating & cluster size
@@ -259,7 +263,6 @@ def cluster_metric(cluster, loc):
 def choose_cluster(df, loc, mode='walking', verbose=False):
     """
     TODO: SettingWithCopyWarning still shows up
-          Scale the "internal walking dist" to depend on mode of transport
     ---------------------
     Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
@@ -267,16 +270,24 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     """
     scores = {}
     poss_clusters = {}
-    for i in df['label'].unique():
-        cluster = df.loc[df['label'] == i, :]
-        cluster['dist_to_loc'] = df.apply(
+    for i in df.copy()['label'].unique():
+        current_cluster = df.loc[df['label'] == i, :]
+        current_cluster['dist_to_loc'] = df.copy().apply(
             lambda row: haver_wrapper(row, loc), axis=1)
-        poss_clusters[i] = cluster
-        scores[i] = round(cluster_metric(cluster, loc), 4)
+        poss_clusters[i] = current_cluster
+        scores[i] = round(cluster_metric(current_cluster, loc), 4)
     
-    best = max(scores, key=lambda k: scores[k])
+    key_of_best = max(scores, key=lambda k: scores[k])
+    output = poss_clusters[key_of_best]
+    
     if verbose:
         display(scores)
-        for cluster in poss_clusters.values():
-            display(cluster)
-    return poss_clusters[best]
+        for current_cluster in poss_clusters.values():
+            display(current_cluster)
+    if len(output) > 10:
+        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
+        if verbose:
+            display(forced_split)
+        choose_cluster(forced_split, loc, mode, verbose=False)
+    return output
+
