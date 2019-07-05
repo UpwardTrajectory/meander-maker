@@ -103,7 +103,7 @@ def cluster(df, min_size=4, allow_single_cluster=True):
         allow_single_cluster=allow_single_cluster
     )
     clusterer.fit(df[['lat', 'lng']])
-    df['label'] = ['ABCDEFGHIJKLMN'[i] for i in clusterer.labels_]
+    df.loc[:, 'label'] = ['ABCDEFGHIJKLMN'[i] for i in clusterer.labels_]
     return df.sort_values('label').reset_index(drop=True)
 
 
@@ -176,7 +176,7 @@ def mapbox(df):
     Plot the locations from a df containing ['lat', 'lng', 'name'] in an
     interactive window.
     """
-    zoom = autozoom(df)
+    zoom = autozoom(df) - 3
     output = px.scatter_mapbox(
         df, lat='lat', lon='lng', hover_name=['name', 'rating'], zoom=zoom,
         color='label', width=600, height=600
@@ -198,7 +198,8 @@ def autozoom(df, pix=1440):
     zoom_num = np.log2(
         156543.03392 * np.cos(np.radians(df['lat'].mean())) * pix / meters
     )
-    return int(zoom_num) - 2
+    #print(f'Zoom = {zoom_num}')
+    return int(zoom_num)
 
 
 def html_builder(loc, meander, tab=False):
@@ -209,7 +210,7 @@ def html_builder(loc, meander, tab=False):
     poly = np.array(
         polyline.decode(meander['overview_polyline']['points'])
     )
-    zoom = autozoom(df)
+    zoom = autozoom(df) - 1
     
     gmapit = gmplot.GoogleMapPlotter(
         df['lat'].mean(), 
@@ -252,12 +253,16 @@ def cluster_metric(cluster, loc):
     MAXIMIZE: average rating & cluster size
     """
     size = len(cluster)
+    if size < 2:
+        return .00000000001
     lat_avg = cluster['lat'].mean()
     lng_avg = cluster['lng'].mean()
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
     max_dist = cluster['dist_to_loc'].max()
-    return 10**5 * size**1.2 * rating_avg / (min_dist * (max_dist - min_dist))
+    numerator = size**1.2 * rating_avg
+    denominator = min_dist * (max_dist - min_dist)**1.2
+    return 10**5 * numerator / denominator
 
 
 def choose_cluster(df, loc, mode='walking', verbose=False):
@@ -270,9 +275,9 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     """
     scores = {}
     poss_clusters = {}
-    for i in df.copy()['label'].unique():
-        current_cluster = df.loc[df['label'] == i, :]
-        current_cluster['dist_to_loc'] = df.copy().apply(
+    for i in (set(df['label'].unique()) - set('N')):
+        current_cluster = df.loc[df['label'] == i, :].copy()
+        current_cluster['dist_to_loc'] = df.apply(
             lambda row: haver_wrapper(row, loc), axis=1)
         poss_clusters[i] = current_cluster
         scores[i] = round(cluster_metric(current_cluster, loc), 4)
@@ -280,15 +285,16 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     key_of_best = max(scores, key=lambda k: scores[k])
     output = poss_clusters[key_of_best]
     
-    if len(output) > 10:
-        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
-        choose_cluster(forced_split, loc, mode, verbose=False)
-        if verbose:
-            display(forced_split)
     if verbose:
         display(scores)
         for current_cluster in poss_clusters.values():
             display(current_cluster)
-    
+    if (len(output) > 10):
+        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
+        if verbose:
+            print("More than 10 choices: Recursively Forcing Split")
+            display(forced_split)
+            display(mapbox(forced_split))
+        return choose_cluster(forced_split, loc, mode, verbose=verbose)
     return output
 
