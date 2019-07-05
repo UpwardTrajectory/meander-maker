@@ -280,14 +280,15 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     key_of_best = max(scores, key=lambda k: scores[k])
     output = poss_clusters[key_of_best]
     
+    if len(output) > 10:
+        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
+        choose_cluster(forced_split, loc, mode, verbose=False)
+        if verbose:
+            display(forced_split)
     if verbose:
         display(scores)
         for current_cluster in poss_clusters.values():
             display(current_cluster)
-    if len(output) > 10:
-        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
-        if verbose:
-            display(forced_split)
-        choose_cluster(forced_split, loc, mode, verbose=False)
+    
     return output
 
