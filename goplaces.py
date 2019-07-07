@@ -189,6 +189,10 @@ def autozoom(df, pix=1440):
     Determine max dist in meters using Haversine Formula, then use that 
     to work backwards to an ideal zoom number for google maps plotting.
     https://groups.google.com/forum/#!topic/google-maps-js-api-v3/hDRO4oHVSeM
+    ------------------------------------
+    When actually calling this function:
+        * subtract 1 inside google maps html_builder
+        * subtract 3 inside mapbox 
     """
     meters = haversine(
         (df['lat'].min(), df['lng'].min()), 
