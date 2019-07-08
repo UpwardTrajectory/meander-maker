@@ -259,8 +259,6 @@ def cluster_metric(cluster, loc):
     size = len(cluster)
     if size < 2:
         return .00000000001
-    lat_avg = cluster['lat'].mean()
-    lng_avg = cluster['lng'].mean()
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
     max_dist = cluster['dist_to_loc'].max()
@@ -271,8 +269,6 @@ def cluster_metric(cluster, loc):
 
 def choose_cluster(df, loc, mode='walking', verbose=False):
     """
-    TODO: SettingWithCopyWarning still shows up
-    ---------------------
     Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
@@ -286,11 +282,15 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         poss_clusters[i] = current_cluster
         scores[i] = round(cluster_metric(current_cluster, loc), 4)
     
-    key_of_best = max(scores, key=lambda k: scores[k])
-    output = poss_clusters[key_of_best]
+    if len(poss_clusters) == 0:
+        output = df.sort_values('rating', ascending=False)[:10]
+    else:
+        key_of_best = max(scores, key=lambda k: scores[k])
+        output = poss_clusters[key_of_best]
     
     if verbose:
         display(scores)
+        display(mapbox(df))
         for current_cluster in poss_clusters.values():
             display(current_cluster)
     if (len(output) > 10):
@@ -298,7 +298,6 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         if verbose:
             print("More than 10 choices: Recursively Forcing Split")
             display(forced_split)
-            display(mapbox(forced_split))
         return choose_cluster(forced_split, loc, mode, verbose=verbose)
     return output
 
