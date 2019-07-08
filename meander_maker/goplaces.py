@@ -64,32 +64,6 @@ def populate_inputs(loc=None, topic=None):
     return loc, topic
 
 
-def build_list(loc=None, topic=None, n=10):
-    """
-    --DEPRECIATED: USE build_df() INSTEAD--
-    Given a location, topic, and number of stops, build a list (increasing
-    dist from start location) of places to visit.
-    """
-    loc, topic = populate_inputs(loc, topic)
-    output = gmaps.places_nearby(
-        loc, 
-        keyword=topic, 
-        rank_by='distance'
-    )
-    return output['results'][:n]
-
-
-def lat_lng_list(one_way_json):
-    """
-    --DEPRECIATED: USE build_df() INSTEAD--
-    Parse the list of JSONs to extract individual lat / lng coordinates.
-    --------
-    returns a list of dictionaries of the form:
-    [{'lat': 47.606269, 'lng': -122.334747}, ...]
-    """
-    return [x['geometry']['location'] for x in one_way_json]
-
-
 def cluster(df, min_size=4, allow_single_cluster=True):
     """
     Use HDBSCAN --
@@ -107,7 +81,7 @@ def cluster(df, min_size=4, allow_single_cluster=True):
     return df.sort_values('label').reset_index(drop=True)
 
 
-def build_df(loc=None, topic=None, n=40):
+def build_df(loc=None, topic=None, n=60):
     """
     Given a location, topic, and number of stops, build a df with cluster labels
     (increasing dist from start location) of places to visit.
@@ -211,7 +185,8 @@ def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     """
     Build an HTML file (saved to current folder as "mymap.html")
     """
-    df = pd.DataFrame([dest['end_location'] for dest in meander['legs']])
+    df = pd.DataFrame([dest['start_location'] for dest in meander['legs']])
+    df = df.append([meander['legs'][-1]['end_location']], ignore_index=True)
     poly = np.array(
         polyline.decode(meander['overview_polyline']['points'])
     )
@@ -246,6 +221,7 @@ def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
             for line in f:
                 output += line
         return output
+    return
 
 
 def haver_wrapper(row, loc):
@@ -312,16 +288,16 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     return output
 
 
-def all_things(loc, topic, mode='walking', verbose=False, output='flask'):
+def all_things(loc, topic, mode='walking', n=40, verbose=False, output='flask'):
     """
-    Take in starting location (loc) and search word (topic) to find 60 results 
+    Take in starting location (loc) and search word (topic) to find 40 results 
     from google maps, cluster them, pick the best cluster, then return something,
     based on the output parameter:
-    output='flask' (return string of html)
-    output='tab' or ='browser' (open a new tab and display the map)
+    DEFAULT: output='flask' (return string of html)
+    output='tab' -OR- output='browser' (open a new tab and display the map)
     output='both' (return the string of html and also open a new tab)
     """
-    df = build_df(loc, topic)
+    df = build_df(loc, topic, n)
     best_cluster = choose_cluster(df, loc, verbose=verbose)
     wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
     

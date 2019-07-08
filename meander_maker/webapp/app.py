@@ -1,19 +1,20 @@
-import pandas as pd
 from flask import Flask, request, render_template, jsonify
-
+from .. import goplaces as gp
 
 app = Flask(__name__, static_url_path="")
 
-@app.route('/')
+@app.route("/")
 def index():
     """Return the main page."""
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/predict', methods=['GET', 'POST'])
-def predict():
-    """Return a random prediction."""
-    data = request.json
-    prediction = model.predict_proba([data['user_input']])
-    return jsonify({'probability': prediction[0][1]})
-
+@app.route("/output", methods=["GET", "POST"])
+def output():
+    """Retun text from user input"""
+    data = request.get_json(force=True)
+    # every time the user_input identifier
+    loc, topic = data['loc'], data['topic']
+    output = gp.all_things(
+        loc, topic, mode='walking', n=20, verbose=False, output='flask')
+    return output
