@@ -194,6 +194,8 @@ def autozoom(df, pix=1440):
         * subtract 1 inside google maps html_builder
         * subtract 3 inside mapbox 
     """
+    if len(df) < 2:
+        return 3
     meters = haversine(
         (df['lat'].min(), df['lng'].min()), 
         (df['lat'].max(), df['lng'].max()), 
@@ -202,11 +204,10 @@ def autozoom(df, pix=1440):
     zoom_num = np.log2(
         156543.03392 * np.cos(np.radians(df['lat'].mean())) * pix / meters
     )
-    #print(f'Zoom = {zoom_num}')
     return int(zoom_num)
 
 
-def html_builder(loc, meander, tab=False):
+def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     """
     Build an HTML file (saved to current folder as "mymap.html")
     """
@@ -230,12 +231,21 @@ def html_builder(loc, meander, tab=False):
         marker=False
     )
     gmapit.plot(poly[:,0], poly[:,1])
-    gmapit.draw("mymap.html")
     
-    if tab:
+    if save_file is not False:
+        gmapit.draw(save_file)
+    
+    if tab or flask_output:
+        gmapit.draw('mymap.html')
+    if tab is True:
         url = 'file:///Users/dakaspar/flatiron/meander_maker/mymap.html'
         webbrowser.open(url, new=2)
-    return
+    if flask_output is True:
+        output = ''
+        with open('mymap.html') as f:
+            for line in f:
+                output += line
+        return output
 
 
 def haver_wrapper(row, loc):
@@ -262,7 +272,7 @@ def cluster_metric(cluster, loc):
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
     max_dist = cluster['dist_to_loc'].max()
-    numerator = size**1.2 * rating_avg
+    numerator = size**2 * rating_avg
     denominator = min_dist * (max_dist - min_dist)**1.2
     return 10**5 * numerator / denominator
 
@@ -294,10 +304,33 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         for current_cluster in poss_clusters.values():
             display(current_cluster)
     if (len(output) > 10):
-        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
+        forced_split = cluster(output, min_size=3, allow_single_cluster=True)
         if verbose:
             print("More than 10 choices: Recursively Forcing Split")
             display(forced_split)
         return choose_cluster(forced_split, loc, mode, verbose=verbose)
     return output
+
+
+def all_things(loc, topic, mode='walking', verbose=False, output='flask'):
+    """
+    Take in starting location (loc) and search word (topic) to find 60 results 
+    from google maps, cluster them, pick the best cluster, then return something,
+    based on the output parameter:
+    output='flask' (return string of html)
+    output='tab' or ='browser' (open a new tab and display the map)
+    output='both' (return the string of html and also open a new tab)
+    """
+    df = build_df(loc, topic)
+    best_cluster = choose_cluster(df, loc, verbose=verbose)
+    wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
+    
+    output = output.lower()
+    flask_output = True
+    new_tab = True
+    if output == 'flask':
+        new_tab = False
+    elif output == 'browser' or output == 'tab':
+        flask_output = False        
+    return html_builder(loc, wlk, tab=new_tab, flask_output=flask_output)
 
