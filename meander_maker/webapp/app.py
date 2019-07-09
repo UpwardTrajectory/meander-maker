@@ -11,10 +11,10 @@ def index():
 
 @app.route("/output", methods=["GET", "POST"])
 def output():
-    """Retun text from user input"""
+    """Return HTML based on user input"""
     data = request.get_json(force=True)
     # every time the user_input identifier
-    loc, topic = data['loc'], data['topic']
+    loc, topic, mode = data['loc'], data['topic'], data['mode']
     output = gp.all_things(
-        loc, topic, mode='walking', n=20, verbose=False, output='flask')
-    return output
+        loc, topic, mode, n=20, verbose=False, output='flask')
+    return render_template(output)
