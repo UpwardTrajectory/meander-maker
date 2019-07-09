@@ -64,32 +64,6 @@ def populate_inputs(loc=None, topic=None):
     return loc, topic
 
 
-def build_list(loc=None, topic=None, n=10):
-    """
-    --DEPRECIATED: USE build_df() INSTEAD--
-    Given a location, topic, and number of stops, build a list (increasing
-    dist from start location) of places to visit.
-    """
-    loc, topic = populate_inputs(loc, topic)
-    output = gmaps.places_nearby(
-        loc, 
-        keyword=topic, 
-        rank_by='distance'
-    )
-    return output['results'][:n]
-
-
-def lat_lng_list(one_way_json):
-    """
-    --DEPRECIATED: USE build_df() INSTEAD--
-    Parse the list of JSONs to extract individual lat / lng coordinates.
-    --------
-    returns a list of dictionaries of the form:
-    [{'lat': 47.606269, 'lng': -122.334747}, ...]
-    """
-    return [x['geometry']['location'] for x in one_way_json]
-
-
 def cluster(df, min_size=4, allow_single_cluster=True):
     """
     Use HDBSCAN --
@@ -107,7 +81,7 @@ def cluster(df, min_size=4, allow_single_cluster=True):
     return df.sort_values('label').reset_index(drop=True)
 
 
-def build_df(loc=None, topic=None, n=40):
+def build_df(loc=None, topic=None, n=60):
     """
     Given a location, topic, and number of stops, build a df with cluster labels
     (increasing dist from start location) of places to visit.
@@ -194,6 +168,8 @@ def autozoom(df, pix=1440):
         * subtract 1 inside google maps html_builder
         * subtract 3 inside mapbox 
     """
+    if len(df) < 2:
+        return 3
     meters = haversine(
         (df['lat'].min(), df['lng'].min()), 
         (df['lat'].max(), df['lng'].max()), 
@@ -202,15 +178,15 @@ def autozoom(df, pix=1440):
     zoom_num = np.log2(
         156543.03392 * np.cos(np.radians(df['lat'].mean())) * pix / meters
     )
-    #print(f'Zoom = {zoom_num}')
     return int(zoom_num)
 
 
-def html_builder(loc, meander, tab=False):
+def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     """
     Build an HTML file (saved to current folder as "mymap.html")
     """
-    df = pd.DataFrame([dest['end_location'] for dest in meander['legs']])
+    df = pd.DataFrame([dest['start_location'] for dest in meander['legs']])
+    df = df.append([meander['legs'][-1]['end_location']], ignore_index=True)
     poly = np.array(
         polyline.decode(meander['overview_polyline']['points'])
     )
@@ -230,11 +206,21 @@ def html_builder(loc, meander, tab=False):
         marker=False
     )
     gmapit.plot(poly[:,0], poly[:,1])
-    gmapit.draw("mymap.html")
     
-    if tab:
+    if save_file is not False:
+        gmapit.draw(save_file)
+    
+    if tab or flask_output:
+        gmapit.draw('mymap.html')
+    if tab is True:
         url = 'file:///Users/dakaspar/flatiron/meander_maker/mymap.html'
         webbrowser.open(url, new=2)
+    if flask_output is True:
+        output = ''
+        with open('mymap.html') as f:
+            for line in f:
+                output += line
+        return output
     return
 
 
@@ -259,20 +245,16 @@ def cluster_metric(cluster, loc):
     size = len(cluster)
     if size < 2:
         return .00000000001
-    lat_avg = cluster['lat'].mean()
-    lng_avg = cluster['lng'].mean()
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
     max_dist = cluster['dist_to_loc'].max()
-    numerator = size**1.2 * rating_avg
+    numerator = size**2 * rating_avg
     denominator = min_dist * (max_dist - min_dist)**1.2
     return 10**5 * numerator / denominator
 
 
 def choose_cluster(df, loc, mode='walking', verbose=False):
     """
-    TODO: SettingWithCopyWarning still shows up
-    ---------------------
     Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
@@ -286,19 +268,45 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         poss_clusters[i] = current_cluster
         scores[i] = round(cluster_metric(current_cluster, loc), 4)
     
-    key_of_best = max(scores, key=lambda k: scores[k])
-    output = poss_clusters[key_of_best]
+    if len(poss_clusters) == 0:
+        output = df.sort_values('rating', ascending=False)[:10]
+    else:
+        key_of_best = max(scores, key=lambda k: scores[k])
+        output = poss_clusters[key_of_best]
     
     if verbose:
         display(scores)
+        display(mapbox(df))
         for current_cluster in poss_clusters.values():
             display(current_cluster)
     if (len(output) > 10):
-        forced_split = cluster(output, min_size=4, allow_single_cluster=False)
+        forced_split = cluster(output, min_size=3, allow_single_cluster=True)
         if verbose:
             print("More than 10 choices: Recursively Forcing Split")
             display(forced_split)
-            display(mapbox(forced_split))
         return choose_cluster(forced_split, loc, mode, verbose=verbose)
     return output
+
+
+def all_things(loc, topic, mode='walking', n=40, verbose=False, output='flask'):
+    """
+    Take in starting location (loc) and search word (topic) to find 40 results 
+    from google maps, cluster them, pick the best cluster, then return something,
+    based on the output parameter:
+    DEFAULT: output='flask' (return string of html)
+    output='tab' -OR- output='browser' (open a new tab and display the map)
+    output='both' (return the string of html and also open a new tab)
+    """
+    df = build_df(loc, topic, n)
+    best_cluster = choose_cluster(df, loc, verbose=verbose)
+    wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
+    
+    output = output.lower()
+    flask_output = True
+    new_tab = True
+    if output == 'flask':
+        new_tab = False
+    elif output == 'browser' or output == 'tab':
+        flask_output = False        
+    return html_builder(loc, wlk, tab=new_tab, flask_output=flask_output)
 
