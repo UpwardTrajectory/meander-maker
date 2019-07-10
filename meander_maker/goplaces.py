@@ -223,9 +223,9 @@ def haver_wrapper(row, loc):
     return haversine(p1, p2, unit='m')
 
 
-def scale_param(param_key, params):
+def scale_param(param_key, weights):
     """Clean the input from HTML and scale to appropriately become an exponent"""
-    return np.log2(float(params[param_key]))
+    return np.log2(float(weights[param_key]))
 
 
 def cluster_metric(cluster, loc, weights=None):
@@ -252,10 +252,10 @@ def cluster_metric(cluster, loc, weights=None):
             "p_min_dist": "2", 
             "p_internal_dist": "4",
             }
-    p_size = scale_param('p_size', params)
-    p_rating = scale_param('p_rating', params)
-    p_min_dist = scale_param('p_min_dist', params)
-    p_internal_dist = scale_param('p_internal_dist', params)
+    p_size = scale_param('p_size', weights)
+    p_rating = scale_param('p_rating', weights)
+    p_min_dist = scale_param('p_min_dist', weights)
+    p_internal_dist = scale_param('p_internal_dist', weights)
     
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
