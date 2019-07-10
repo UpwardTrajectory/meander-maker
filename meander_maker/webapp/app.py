@@ -23,7 +23,7 @@ def generate_output():
               "p_internal_dist": data['p_internal_dist'],
              }
     if loc.strip('"').lower() in ['here', 'none', 'current', 'n/a', 'na', '']:
-        loc = gp.get_loc(query, current=True)
+        loc = gp.get_loc(_, current=True)
     results = gp.all_things(
         loc, topic, weights=weights, mode=mode, n=n, verbose=False, output='flask')
     html_map = results['html']
