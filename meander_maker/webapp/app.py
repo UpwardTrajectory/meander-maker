@@ -15,10 +15,11 @@ def output():
     data = request.get_json(force=True)
     # every time the user_input identifier
     loc, topic, mode = data['loc'], data['topic'], data['mode']
-    return str(loc)+str(topic)+str(mode)  # For Testing Only
-    html_map = gp.all_things(
-        loc, topic, mode, n=20, verbose=False, output='flask'
-    )
     
-    #return html_map
+    # For Testing Only (it worked)
+    #return str(loc)+str(topic)+str(mode)
+    
+    html_map = gp.all_things(
+        loc, topic, mode, n=20, verbose=False, output='flask')
+    return html_map
     
