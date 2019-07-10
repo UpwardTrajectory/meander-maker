@@ -29,7 +29,7 @@
           req.set_header("content-type","application/json")
           data = json.dumps({"loc": document["user_input_loc"].value,
                              "topic": document["user_input_topic"].value,
-                             "mode": document["user_input_mode"].value
+                             "mode": user_input_mode.value
                              })
           req.send(data)
       document["click_button"].bind("click", get_output)
@@ -42,7 +42,6 @@
       <option value="bicycling">Bicycle</option>
       <option value="transit">Public Transit</option>
     </select>
-      <textarea >walking</textarea>
     <button id="click_button">Compute! (may take several seconds)</button>
     <br />
     <h1>User Output</h1>
