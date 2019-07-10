@@ -283,7 +283,10 @@ def all_things(query, topic, mode='walking', n=40, verbose=False, output='flask'
     output='tab' -OR- output='browser' (open a new tab and display the map)
     output='both' (return the string of html and also open a new tab)
     """
-    loc = get_loc(query, current=False)
+    if query.lower() in ['here', 'none', 'current', 'n/a', 'na', '']:
+        loc = get_loc(query, current=True)
+    else:
+        loc = get_loc(query, current=False)
     df = build_df(loc, topic, n)
     best_cluster = choose_cluster(df, loc, verbose=verbose)
     wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
