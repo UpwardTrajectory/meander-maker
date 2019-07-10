@@ -294,6 +294,10 @@ def all_things(query, topic, mode='walking', n=40, verbose=False, output='flask'
     if output == 'flask':
         new_tab = False
     elif output == 'browser' or output == 'tab':
-        flask_output = False        
-    return html_builder(loc, wlk, tab=new_tab, flask_output=flask_output)
+        flask_output = False
+    
+    return {
+        'html': html_builder(loc, wlk, tab=new_tab, flask_output=flask_output),
+        'best_cluster': best_cluster,
+    }
 
