@@ -14,7 +14,7 @@ with open('.secret.key', 'r') as f:
     api_keys = ast.literal_eval(f.read().strip())
 
 px.set_mapbox_access_token(api_keys['mapbox'])
-gmaps = googlemaps.Client(key=api_keys['googlemaps'])
+gmaps = googlemaps.Client(key=api_keys['samesame_gmaps'])
 
 def get_loc(query, current=True):
     """Initialize a location using one of two methods:
