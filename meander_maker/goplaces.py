@@ -113,8 +113,9 @@ def meander(df, loc=None, mode='walking', verbose=False):
          {"driving", "walking", "bicycling", "transit"}
     if verbose=True, also print out total meander dist & time.
     """
-    loc = populate_inputs(loc, False)[0]
-    df = choose_cluster(df, loc)[:10]
+    if loc is None:
+        loc = populate_inputs(loc, False)[0]
+    #df = choose_cluster(df, loc, weights)[:10]
 
     start = df[['lat', 'lng']].iloc[0]
     stop = df[['lat', 'lng']].iloc[-1]
@@ -295,7 +296,7 @@ def choose_cluster(df, loc, weights, mode='walking', verbose=False):
         if verbose:
             print("More than 10 choices: Recursively Forcing Split")
             display(forced_split)
-        return choose_cluster(forced_split, loc, mode, verbose=verbose)
+        return choose_cluster(forced_split, loc, weights, mode, verbose=verbose)
     return output
 
 
@@ -312,6 +313,8 @@ def all_things(query, topic, weights, mode='walking', n=40, verbose=False, outpu
     else:
         loc = get_loc(query, current=False)
     n = int(n)
+    if type(weights) is str:
+        weights = ast.literal_eval(weights)
     df = build_df(loc, topic, n)
     best_cluster = choose_cluster(df, loc, weights, verbose=verbose)
     wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
