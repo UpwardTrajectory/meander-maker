@@ -16,5 +16,8 @@ def output():
     # every time the user_input identifier
     loc, topic, mode = data['loc'], data['topic'], data['mode']
     html_map = gp.all_things(
-        loc, topic, mode, n=60, verbose=False, output='flask')
-    return html_map
+        loc, topic, mode, n=20, verbose=False, output='flask'
+    )
+    return str(loc)+str(topic)+str(mode)  # For Testing Only
+    #return html_map
+    
