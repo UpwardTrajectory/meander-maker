@@ -26,7 +26,7 @@
               data = json.loads(response.text)
               places = [f"{place['name']} ({place['rating']})"
                         for place in data['best_cluster']]
-              document["places"].html = places
+              document["places"].html = "<br />".join(places)
               document["result"].html = data['iframe']
           else:
               warnings.warn(response.text)
