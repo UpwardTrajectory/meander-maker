@@ -37,19 +37,45 @@
           req.set_header("content-type","application/json")
           data = json.dumps({"loc": document["user_input_loc"].value,
                              "topic": document["user_input_topic"].value,
-                             "mode": document["user_input_mode"].value
+                             "mode": document["user_input_mode"].value,
+                             "patience": document["patience"].value,
+                             "p_size": document["p_size"].value,
+                             "p_rating": document["p_rating"].value,
+                             "p_min_dist": document["p_min_dist"].value,
+                             "p_internal_dist": document["p_internal_dist"].value,
                              })
           req.send(data)
       document["click_button"].bind("click", get_output)
     </script>
-    <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
-    <textarea id="user_input_topic">wine tasting</textarea>
-    <select id="user_input_mode">
-      <option value="walking">Walking</option>
-      <option value="driving">Driving</option>
-      <option value="bicycling">Bicycle</option>
-      <option value="transit">Public Transit</option>
-    </select>
+    <label for="user_input_loc">Starting Location (specific is better than general)</label>
+      <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
+    <br />
+      <label for="user_input_topic">Topic (Anything Google Maps can return results for)</label>
+      <textarea id="user_input_topic">wine tasting</textarea>
+    <br />
+      <label for="user_input_mode">Mode of Transport</label>
+      <select id="user_input_mode">
+          <option value="walking">Walking</option>
+          <option value="driving">Driving</option>
+          <option value="bicycling">Bicycle</option>
+          <option value="transit">Public Transit</option>
+      </select>
+    <br />
+      <label for="patience">Max Search Results (page loads in groups of 20, adds 2 seconds of wait time)</label>
+        <input type="range" id="patience" name="seconds" min="1" max="3">
+    <br />
+      <label for="p_size">Variety</label>
+        <input type="range" id="p_size" name="seconds" min="1" max="8">
+    <br />
+      <label for="p_rating">Ratings</label>
+        <input type="range" id="p_rating" name="seconds" min="1" max="8">
+    <br />
+      <label for="p_min_dist">Short Distance to First Stop</label>
+        <input type="range" id="p_min_dist" name="seconds" min="1" max="8">
+    <br />
+      <label for="p_internal_dist">Internal Distance within Cluster</label>
+        <input type="range" id="p_internal_dist" name="seconds" min="1" max="8">
+    <br />
     <button id="click_button">Compute! (may take several seconds)</button>
     <br />
     <h1>User Output</h1>
