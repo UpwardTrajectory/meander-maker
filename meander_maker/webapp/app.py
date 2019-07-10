@@ -19,7 +19,7 @@ def generate_output():
     loc, topic, mode = data['loc'], data['topic'], data['mode']
     results = gp.all_things(
         loc, topic, mode, n=20, verbose=False, output='flask')
-    html_map = results['html_map']
+    html_map = results['html']
     best_cluster = results['best_cluster']
 #     html_map_b64 = base64.b64encode(html_map.encode('utf-8'))
 #     return (
