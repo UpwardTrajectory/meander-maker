@@ -13,7 +13,6 @@ from hdbscan import HDBSCAN
 with open('.secret.key', 'r') as f:
     api_keys = ast.literal_eval(f.read().strip())
 
-#plotly.offline.init_notebook_mode(connected=True)
 px.set_mapbox_access_token(api_keys['mapbox'])
 gmaps = googlemaps.Client(key=api_keys['googlemaps'])
 
@@ -280,7 +279,7 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         for current_cluster in poss_clusters.values():
             display(current_cluster)
     if (len(output) > 10):
-        forced_split = cluster(output, min_size=3, allow_single_cluster=True)
+        forced_split = cluster(output, min_size=3, allow_single_cluster=False)
         if verbose:
             print("More than 10 choices: Recursively Forcing Split")
             display(forced_split)

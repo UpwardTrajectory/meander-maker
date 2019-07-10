@@ -15,6 +15,6 @@ def output():
     data = request.get_json(force=True)
     # every time the user_input identifier
     loc, topic, mode = data['loc'], data['topic'], data['mode']
-    output = gp.all_things(
-        loc, topic, mode, n=20, verbose=False, output='flask')
-    return render_template(output)
+    html_map = gp.all_things(
+        loc, topic, mode, n=60, verbose=False, output='flask')
+    return html_map
