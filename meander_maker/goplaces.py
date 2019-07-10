@@ -308,8 +308,8 @@ def all_things(query, topic, weights, mode='walking', n=40, verbose=False, outpu
     output='tab' -OR- output='browser' (open a new tab and display the map)
     output='both' (return the string of html and also open a new tab)
     """
-    if query.strip('"').lower() in ['here', 'none', 'current', 'n/a', 'na', '']:
-        loc = get_loc(query, current=True)
+    if type(query) is dict:
+        pass
     else:
         loc = get_loc(query, current=False)
     n = int(n)
