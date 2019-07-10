@@ -17,8 +17,13 @@ def generate_output():
     # every time the user_input identifier
     loc, topic, mode = data['loc'], data['topic'], data['mode']
     n = int(data['patience']) * 20
+    params = {"p_size": data["p_size"],
+              "p_rating": data["p_rating"],
+              "p_min_dist": data["p_min_dist"],
+              "p_internal_dist": data["p_internal_dist"],
+             }
     results = gp.all_things(
-        loc, topic, mode, n=n, verbose=False, output='flask')
+        loc, topic, weights=params, mode=mode, n=n, verbose=False, output='flask')
     html_map = results['html']
     best_cluster = results['best_cluster']
     map_id = uuid.uuid4()
