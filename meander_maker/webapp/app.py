@@ -28,5 +28,5 @@ def generate_output():
     map_id = uuid.uuid4()
     with open(f'meander_maker/webapp/static/maps/{map_id}.html', 'w') as f:
         f.write(html_map)
-    return f'<iframe src="/maps/{map_id}.html"></iframe>'
+    return f'<iframe class="meander_map" src="/maps/{map_id}.html"></iframe>'
     
