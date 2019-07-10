@@ -173,6 +173,41 @@ def autozoom(df, pix=1440):
     )
     return int(zoom_num)
 
+def autozoom2(df):
+        """
+        Adapted from: https://www.e-tinkers.com/2018/03/how-to-plot-cycling-route-using-google-maps-api-and-flask-web-framework/
+        Algorithm to derive zoom from a route. For details please see
+        - https://developers.google.com/maps/documentation/javascript/maptypes#WorldCoordinates
+        - http://stackoverflow.com/questions/6048975/google-maps-v3-how-to-calculate-the-zoom-level-for-a-given-bounds
+        :return: zoom value 0 - 21 based on the how widely spread of the route coordinates
+        """
+        map_size = {"height": 900, "width": 1900}
+        max_zoom = 21   # maximum zoom level based on Google Map API
+        world_dimension = {'height': 256, 'width': 256}     # min map size for entire world
+
+        latitudes = df['lat'].values
+        longitudes = df['lng'].values
+
+        # calculate longitude span between east and west
+        delta = max(longitudes) - min(longitudes)
+        if delta < 0:
+            lon_span = (delta + 360) / 360
+        else:
+            lon_span = delta / 360
+
+        # calculate latitude spread between south and north
+        lat_span = (max(latitudes) - min(latitudes)) / np.pi
+
+        # get zoom for both latitude and longitude
+        zoom_lat = np.floor(
+            np.log(map_size['height'] / world_dimension['height'] / lat_span) 
+            / np.log(2))
+        zoom_lon = np.floor(
+            np.log(map_size['width'] / world_dimension['width'] / lon_span) 
+            / np.log(2))
+
+        return min(zoom_lat, zoom_lon, max_zoom)-1
+
 
 def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     """Build an HTML file (saved to current folder as 'mymap.html')"""
@@ -181,7 +216,7 @@ def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     poly = np.array(
         polyline.decode(meander['overview_polyline']['points'])
     )
-    zoom = autozoom(df) - 1
+    zoom = autozoom2(df)
     
     gmapit = gmplot.GoogleMapPlotter(
         df['lat'].mean(), 
