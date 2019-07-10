@@ -171,6 +171,8 @@ def autozoom(df, pix=1440):
     zoom_num = np.log2(
         156543.03392 * np.cos(np.radians(df['lat'].mean())) * pix / meters
     )
+    if zoom_num < 2:
+        zoom_num = 2
     return int(zoom_num)
 
 def autozoom2(df):
@@ -216,7 +218,7 @@ def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
     poly = np.array(
         polyline.decode(meander['overview_polyline']['points'])
     )
-    zoom = autozoom2(df)
+    zoom = autozoom(df) - 1
     
     gmapit = gmplot.GoogleMapPlotter(
         df['lat'].mean(), 
