@@ -19,7 +19,7 @@
       import warnings
       def show_results(response):
           if response.status==200 or response.status==0:
-              document["result"].html = response.content
+              document["result"].html = response.text
           else:
               warnings.warn(response.text)
       def get_output(ev):
