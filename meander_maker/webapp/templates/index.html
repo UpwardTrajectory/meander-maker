@@ -29,7 +29,7 @@
           req.set_header("content-type","application/json")
           data = json.dumps({"loc": document["user_input_loc"].value,
                              "topic": document["user_input_topic"].value,
-                             "mode": user_input_mode.value
+                             "mode": document["user_input_mode"].value
                              })
           req.send(data)
       document["click_button"].bind("click", get_output)
