@@ -34,9 +34,15 @@
           req.send(data)
       document["click_button"].bind("click", get_output)
     </script>
-    <textarea id="user_input_loc">Starting Location</textarea>
-    <textarea id="user_input_topic">Topic</textarea>
-    <textarea id="user_input_mode">walking, driving, bicycling, transit</textarea>
+    <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
+    <textarea id="user_input_topic">wine tasting</textarea>
+    <select id="user_input_mode">
+      <option value="walking">Walking</option>
+      <option value="driving">Driving</option>
+      <option value="bicycling">Bicycle</option>
+      <option value="transit">Public Transit</option>
+    </select>
+      <textarea >walking</textarea>
     <button id="click_button">Compute! (may take several seconds)</button>
     <br />
     <h1>User Output</h1>
