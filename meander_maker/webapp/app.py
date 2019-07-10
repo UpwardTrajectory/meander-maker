@@ -16,7 +16,7 @@ def generate_output():
     data = request.get_json(force=True)
     # every time the user_input identifier
     loc, topic, mode = data['loc'], data['topic'], data['mode']
-    n = data['patience'] * 20
+    n = int(data['patience']) * 20
     results = gp.all_things(
         loc, topic, mode, n=n, verbose=False, output='flask')
     html_map = results['html']
