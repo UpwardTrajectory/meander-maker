@@ -309,7 +309,7 @@ def all_things(query, topic, weights, mode='walking', n=40, verbose=False, outpu
     output='both' (return the string of html and also open a new tab)
     """
     if type(query) is dict:
-        pass
+        loc = query
     else:
         loc = get_loc(query, current=False)
     n = int(n)
