@@ -223,25 +223,49 @@ def haver_wrapper(row, loc):
     return haversine(p1, p2, unit='m')
 
 
-def cluster_metric(cluster, loc):
-    """TODO: Fine tune to allow adjustment based on user preference
-    ---------------------
-    Evaluate which cluster is best. Goals are to:
-    MINIMIZE: dist to first stop & total distance between stops
+def scale_param(param_key, params):
+    """Clean the input from HTML and scale to appropriately become an exponent"""
+    return np.log2(float(params[param_key]))
+
+
+def cluster_metric(cluster, loc, weights=None):
+    """Evaluate which cluster is best. Goals are to:
     MAXIMIZE: average rating & cluster size
+    MINIMIZE: dist to first stop & total distance between stops
+    ------------------------------------------
+    params is a dictionary passed from the website which controls
+    exponential weights for the above variables
+    params = {
+    "p_size": "4", 
+    "p_rating": "2", 
+    "p_min_dist": "2", 
+    "p_internal_dist": "8"
+    }
     """
     size = len(cluster)
     if size < 2:
-        return .00000000001
+        return 1e-10
+    if weights is None:
+        params = {
+            "p_size": "5", 
+            "p_rating": "2", 
+            "p_min_dist": "2", 
+            "p_internal_dist": "4",
+            }
+    p_size = scale_param('p_size', params)
+    p_rating = scale_param('p_rating', params)
+    p_min_dist = scale_param('p_min_dist', params)
+    p_internal_dist = scale_param('p_internal_dist', params)
+    
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
     max_dist = cluster['dist_to_loc'].max()
-    numerator = size**2 * rating_avg
-    denominator = min_dist * (max_dist - min_dist)**1.2
+    numerator = size**p_size * rating_avg**p_rating
+    denominator = min_dist**p_min_dist * (max_dist - min_dist)**p_internal_dist
     return 10**5 * numerator / denominator
 
 
-def choose_cluster(df, loc, mode='walking', verbose=False):
+def choose_cluster(df, loc, weights, mode='walking', verbose=False):
     """Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
@@ -253,7 +277,7 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
         current_cluster['dist_to_loc'] = df.apply(
             lambda row: haver_wrapper(row, loc), axis=1)
         poss_clusters[i] = current_cluster
-        scores[i] = round(cluster_metric(current_cluster, loc), 4)
+        scores[i] = round(cluster_metric(current_cluster, loc, weights), 4)
     
     if len(poss_clusters) == 0:
         output = df.sort_values('rating', ascending=False)[:10]
@@ -275,7 +299,7 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     return output
 
 
-def all_things(query, topic, mode='walking', n=40, verbose=False, output='flask'):
+def all_things(query, topic, weights, mode='walking', n=40, verbose=False, output='flask'):
     """Take in starting location (loc) and search word (topic) to find 40 results 
     from google maps, cluster them, pick the best cluster, then return something,
     based on the output parameter:
@@ -289,7 +313,7 @@ def all_things(query, topic, mode='walking', n=40, verbose=False, output='flask'
         loc = get_loc(query, current=False)
     n = int(n)
     df = build_df(loc, topic, n)
-    best_cluster = choose_cluster(df, loc, verbose=verbose)
+    best_cluster = choose_cluster(df, loc, weights, verbose=verbose)
     wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
     
     output = output.lower()
