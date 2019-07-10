@@ -55,7 +55,7 @@ def populate_inputs(loc=None, topic=None):
     """
     if loc is None:
         query = input("Where would you like to start?")
-        loc = get_loc(query)
+        loc = get_loc(query, current=False)
     if topic is None:
         topic = get_topic()
     return loc, topic
@@ -308,7 +308,7 @@ def all_things(query, topic, weights, mode='walking', n=40, verbose=False, outpu
     output='tab' -OR- output='browser' (open a new tab and display the map)
     output='both' (return the string of html and also open a new tab)
     """
-    if query.lower() in ['here', 'none', 'current', 'n/a', 'na', '']:
+    if query.strip('"').lower() in ['here', 'none', 'current', 'n/a', 'na', '']:
         loc = get_loc(query, current=True)
     else:
         loc = get_loc(query, current=False)
