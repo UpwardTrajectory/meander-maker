@@ -16,9 +16,8 @@ with open('.secret.key', 'r') as f:
 px.set_mapbox_access_token(api_keys['mapbox'])
 gmaps = googlemaps.Client(key=api_keys['googlemaps'])
 
-def get_loc(current=True):
-    """
-    Initialize a location using one of two methods:
+def get_loc(query, current=True):
+    """Initialize a location using one of two methods:
     ----------------
     current = True:
         Use data from cell towers, WiFi, and GPS
@@ -34,7 +33,6 @@ def get_loc(current=True):
     if current is True:
         output = gmaps.geolocate()['location']
     else:
-        query = input('Where would you like to start?')
         coord_test = query.translate({ord(i) : None for i in '{}()[]- ,.:;'})
         if (query.count(',') == 1 and coord_test.isnumeric()):
             coords = [float(x) for x in query.split(',')]
@@ -52,20 +50,19 @@ def get_topic():
 
 
 def populate_inputs(loc=None, topic=None):
-    """
-    If either location or topic don't exist yet, query the user to populate
+    """If either location or topic don't exist yet, query the user to populate
     those inputs.
     """
     if loc is None:
-        loc = get_loc(False)
+        query = input("Where would you like to start?")
+        loc = get_loc(query)
     if topic is None:
         topic = get_topic()
     return loc, topic
 
 
 def cluster(df, min_size=4, allow_single_cluster=True):
-    """
-    Use HDBSCAN --
+    """Use HDBSCAN --
     (Hierarchical Density-Based Spatial Clustering of Applications with Noise)
     to find the best clusters for the meander.
     """
@@ -81,8 +78,7 @@ def cluster(df, min_size=4, allow_single_cluster=True):
 
 
 def build_df(loc=None, topic=None, n=60):
-    """
-    Given a location, topic, and number of stops, build a df with cluster labels
+    """Given a location, topic, and number of stops, build a df with cluster labels
     (increasing dist from start location) of places to visit.
     """
     loc, topic = populate_inputs(loc, topic)
@@ -112,8 +108,7 @@ def build_df(loc=None, topic=None, n=60):
 
 
 def meander(df, loc=None, mode='walking', verbose=False):
-    """
-    Given a list of places to visit, return a JSON of the stops.
+    """Given a list of places to visit, return a JSON of the stops.
     mode: Specifies the mode of transport to use when calculating directions.
          {"driving", "walking", "bicycling", "transit"}
     if verbose=True, also print out total meander dist & time.
@@ -145,8 +140,7 @@ def meander(df, loc=None, mode='walking', verbose=False):
 
 
 def mapbox(df):
-    """
-    Plot the locations from a df containing ['lat', 'lng', 'name'] in an
+    """Plot the locations from a df containing ['lat', 'lng', 'name'] in an
     interactive window.
     """
     zoom = autozoom(df) - 3
@@ -158,8 +152,7 @@ def mapbox(df):
 
 
 def autozoom(df, pix=1440):
-    """
-    Determine max dist in meters using Haversine Formula, then use that 
+    """Determine max dist in meters using Haversine Formula, then use that 
     to work backwards to an ideal zoom number for google maps plotting.
     https://groups.google.com/forum/#!topic/google-maps-js-api-v3/hDRO4oHVSeM
     ------------------------------------
@@ -181,9 +174,7 @@ def autozoom(df, pix=1440):
 
 
 def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
-    """
-    Build an HTML file (saved to current folder as "mymap.html")
-    """
+    """Build an HTML file (saved to current folder as 'mymap.html')"""
     df = pd.DataFrame([dest['start_location'] for dest in meander['legs']])
     df = df.append([meander['legs'][-1]['end_location']], ignore_index=True)
     poly = np.array(
@@ -224,8 +215,7 @@ def html_builder(loc, meander, tab=False, save_file=False, flask_output=False):
 
 
 def haver_wrapper(row, loc):
-    """
-    Wrapper for haversine function that works on each row of a dataframe. 
+    """Wrapper for haversine function that works on each row of a dataframe. 
     Intenionally NOT vectorized b/c it works faster on small dataframes.
     """
     p1 = loc['lat'], loc['lng']
@@ -234,8 +224,7 @@ def haver_wrapper(row, loc):
 
 
 def cluster_metric(cluster, loc):
-    """
-    TODO: Fine tune to allow adjustment based on user preference
+    """TODO: Fine tune to allow adjustment based on user preference
     ---------------------
     Evaluate which cluster is best. Goals are to:
     MINIMIZE: dist to first stop & total distance between stops
@@ -253,8 +242,7 @@ def cluster_metric(cluster, loc):
 
 
 def choose_cluster(df, loc, mode='walking', verbose=False):
-    """
-    Accepts a df from build_df() and chooses the optimal cluster to meander.
+    """Accepts a df from build_df() and chooses the optimal cluster to meander.
     loc is the starting location of the search, which should be a dictionary of
     the form: {'lat': 47.606269, 'lng': -122.334747}
     """
@@ -287,15 +275,15 @@ def choose_cluster(df, loc, mode='walking', verbose=False):
     return output
 
 
-def all_things(loc, topic, mode='walking', n=40, verbose=False, output='flask'):
-    """
-    Take in starting location (loc) and search word (topic) to find 40 results 
+def all_things(query, topic, mode='walking', n=40, verbose=False, output='flask'):
+    """Take in starting location (loc) and search word (topic) to find 40 results 
     from google maps, cluster them, pick the best cluster, then return something,
     based on the output parameter:
     DEFAULT: output='flask' (return string of html)
     output='tab' -OR- output='browser' (open a new tab and display the map)
     output='both' (return the string of html and also open a new tab)
     """
+    loc = get_loc(query, current=False)
     df = build_df(loc, topic, n)
     best_cluster = choose_cluster(df, loc, verbose=verbose)
     wlk = meander(best_cluster, loc, mode=mode, verbose=verbose)
