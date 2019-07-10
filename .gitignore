@@ -106,3 +106,4 @@ venv.bak/
 # custom
 .secret.key
 mymap.html
+meander_maker/webapp/static/maps/
