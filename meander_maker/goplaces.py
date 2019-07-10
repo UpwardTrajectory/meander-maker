@@ -223,9 +223,9 @@ def haver_wrapper(row, loc):
     return haversine(p1, p2, unit='m')
 
 
-def scale_param(param_key, weights):
+def scale_param(param):
     """Clean the input from HTML and scale to appropriately become an exponent"""
-    return np.log2(float(weights[param_key]))
+    return np.log2(float(param))
 
 
 def cluster_metric(cluster, loc, weights=None):
@@ -233,9 +233,9 @@ def cluster_metric(cluster, loc, weights=None):
     MAXIMIZE: average rating & cluster size
     MINIMIZE: dist to first stop & total distance between stops
     ------------------------------------------
-    params is a dictionary passed from the website which controls
+    weights is a dictionary passed from the website which controls
     exponential weights for the above variables
-    params = {
+    weights = {
     "p_size": "4", 
     "p_rating": "2", 
     "p_min_dist": "2", 
@@ -246,16 +246,16 @@ def cluster_metric(cluster, loc, weights=None):
     if size < 2:
         return 1e-10
     if weights is None:
-        params = {
+        weights = {
             "p_size": "5", 
             "p_rating": "2", 
             "p_min_dist": "2", 
             "p_internal_dist": "4",
             }
-    p_size = scale_param('p_size', weights)
-    p_rating = scale_param('p_rating', weights)
-    p_min_dist = scale_param('p_min_dist', weights)
-    p_internal_dist = scale_param('p_internal_dist', weights)
+    p_size = scale_param(weights['p_size'])
+    p_rating = scale_param(weights['p_rating'])
+    p_min_dist = scale_param(weights['p_min_dist'])
+    p_internal_dist = scale_param(weights['p_internal_dist'])
     
     rating_avg = cluster['rating'].mean()
     min_dist = cluster['dist_to_loc'].min()
