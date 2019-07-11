@@ -15,6 +15,7 @@ It's time for an urban themed walk! Perhaps you'd like to efficiently visit the 
      * wine tasting
      * free museums
      * parks
+     * women's shoes
      * any category [Google Maps](https://maps.google.com) would recognize
 
      
