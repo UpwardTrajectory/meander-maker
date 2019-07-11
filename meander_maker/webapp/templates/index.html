@@ -40,10 +40,10 @@
     }
   </style>
   <body id="page-top" onload="brython(1)">
-              <h1>Meander Maker</h1><br />
+              <h1 class="text-center">Meander Maker</h1><br />
 
     <div class="row">
-        <div class="col">
+        <div class="col-md-2">
           <h3>User Input</h3>
             <script type="text/python3">
               from browser import document, ajax
@@ -118,14 +118,16 @@
         </dd>
     </dl>
   <br />
-    <button class="button button2" id="click_button">Compute! (~5 sec max)</button>
-    <br />
-    <h3>Output</h3>
-    <!--try replacing yellow with div to remove the yellow styling-->
-    <div class="yellow" id="places"></div>
             </div>
+        <div class="col-md-2">
+            <button class="button button2" id="click_button">Compute! (~5 sec max)</button>
+            <br />
+            <h3>Output</h3>
+    <!--try replacing yellow with div to remove the yellow styling-->
+            <div class="yellow" id="places"></div>
+        </div>
         <!-- <div class="columns"> -->
-    <div class="col" id="gmap"></div>
+      <div class="col-md-8" id="gmap"></div>
             <!-- </div> -->
     </div>
     </body>
