@@ -4,6 +4,7 @@
     <!--both brython.js and brython_stdlib.js files live in the static/ dir-->
     <script type="text/javascript" src="brython.js"></script>
     <script type="text/javascript" src="brython_stdlib.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
   </head>
   <!--adding custom style tag called yellow-->
   <style>
@@ -39,9 +40,9 @@
     }
   </style>
   <body id="page-top" onload="brython(1)">
+      <h1>Meander Maker</h1><br />
     <div class="row">
-        <div class="columns small-4">
-          <h1>Meander Maker</h1><br />
+        <div class="col">
           <h3>User Input</h3>
             <script type="text/python3">
               from browser import document, ajax
@@ -59,7 +60,7 @@
               def get_output(ev):
                   req = ajax.ajax()
                   req.bind("complete", show_results)
-                  req.open("POST", "/output", True)
+                  req.open("POST", "/output", True
                   req.set_header("content-type","application/json")
                   data = json.dumps({"loc": document["user_input_loc"].value,
                                     "topic": document["user_input_topic"].value,
@@ -123,7 +124,7 @@
     <div class="yellow" id="places"></div>
             </div>
         <!-- <div class="columns"> -->
-    <div class="columns" id="gmap"></div>
+    <div class="col" id="gmap"></div>
             <!-- </div> -->
     </div>
     </body>
