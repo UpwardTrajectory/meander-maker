@@ -42,7 +42,7 @@ It's time for an urban themed walk! Perhaps you'd like to efficiently visit the 
 
 But Meander-Maker will do something like this:
 ![clusters of wine rooms](https://github.com/UpwardTrajectory/meander-maker/blob/master/readme_clusters.png?raw=true)  
-And find the best cluster, then return turn-by-turn directions.
+And find the best cluster, then also return turn-by-turn directions.
  
 ### To Do:
  * Allow "veto" of individual locations, then re-build the path
