@@ -44,7 +44,7 @@
               <h1 class="text-center">Meander Maker</h1><br />
 
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-md-3">
           <h3>User Input</h3>
             <script type="text/python3">
               from browser import document, ajax
@@ -105,18 +105,26 @@
             <label>(Relative Importance)</label>
           <br />
             <label>Lower -------- Higher</label>
-        <br />
+            <br />
+            <label for="p_size">Cluster Size</label>
+            <br />
           <input type="range" id="p_size" name="seconds" min="1" max="8" value="4">
-          <label for="p_size">Cluster Size</label>
-        <br />
-          <input type="range" id="p_rating" name="seconds" min="1" max="8" value="2">
+          <br />
           <label for="p_rating">Ratings</label>
+          <br />
+          <input type="range" id="p_rating" name="seconds" min="1" max="8" value="2">
+          
+        <br />
+        <label for="p_min_dist">Short Distance to First Stop</label>
         <br />
           <input type="range" id="p_min_dist" name="seconds" min="1" max="8" value="2">
-          <label for="p_min_dist">Short Distance to First Stop</label>
+          <br />
+          
         <br />
-          <input type="range" id="p_internal_dist" name="seconds" min="1" max="8" value="3">
           <label for="p_internal_dist">Internal Distance within Cluster</label>
+          <br />  
+        <input type="range" id="p_internal_dist" name="seconds" min="1" max="8" value="3">
+          
         <br />
         </dd>
     </dl>
@@ -126,11 +134,10 @@
             <button class="button button2" id="click_button">Compute! (~5 sec max)</button>
             <br />
             <h3>Output</h3>
-    <!--try replacing yellow with div to remove the yellow styling-->
             <div class="yellow" id="places"></div>
         </div>
         <!-- <div class="columns"> -->
-      <div class="col-md-8" id="gmap"></div>
+      <div class="col-md-7" id="gmap"></div>
             <!-- </div> -->
     </div>
     </body>
