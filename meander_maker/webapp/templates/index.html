@@ -29,7 +29,7 @@
               places = [f"{place['name']} ({place['rating']})"
                         for place in data['best_cluster']]
               document["places"].html = "<br />".join(places)
-              document["result"].html = data['iframe']
+              document["gmap"].html = data['iframe']
           else:
               warnings.warn(response.text)
       def get_output(ev):
@@ -84,9 +84,9 @@
     <!--try replacing yellow with div to remove the yellow styling-->
     <div class="yellow" id="places"></div>
             </div>
-        <div class="column">
-    <div class="yellow" id="result"></div>
-            </div>
+        <!-- <div class="column"> -->
+    <div class="column" id="gmap"></div>
+            <!-- </div> -->
   </div>
     </body>
 </html>
