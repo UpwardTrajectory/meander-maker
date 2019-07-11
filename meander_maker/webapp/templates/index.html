@@ -77,9 +77,11 @@
               document["click_button"].bind("click", get_output)
             </script>
     <label for="user_input_loc">Starting Location<br />(specific > general)</label>
+    <br />
       <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
     <br />
       <label for="user_input_topic">Topic<br />(Anything Google Maps knows)</label>
+      <br />
       <textarea id="user_input_topic">wine tasting</textarea>
     <br />
       <label for="user_input_mode">Mode of Transport</label>
@@ -91,10 +93,10 @@
           <option value="transit">Public Transit</option>
       </select>
     <br />
-      
+      <br />
         
     <dl>
-      <dt>Advanced Tuning</dt>
+      <dt>Optional Advanced Tuning</dt>
       <br />
         <dd>
             <label for="patience">Max Search Results</label>
@@ -103,11 +105,10 @@
             <br />
             <input type="range" id="patience" name="seconds" min="1" max="3">
             <br />
+            <br />
             <label>Customize Cluster Choice Metric</label>
             <label>(Relative Importance)</label>
           <br />
-            <label>Lower <--------> Higher</label>
-            <br />
             <label for="p_size">Cluster Size</label>
             <br />
           <input type="range" id="p_size" name="seconds" min="1" max="8" value="4">
