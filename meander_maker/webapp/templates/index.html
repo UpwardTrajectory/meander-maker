@@ -76,13 +76,14 @@
                   req.send(data)
               document["click_button"].bind("click", get_output)
             </script>
-    <label for="user_input_loc">Starting Location (specific > general)</label>
+    <label for="user_input_loc">Starting Location<br />(specific > general)</label>
       <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
     <br />
       <label for="user_input_topic">Topic<br />(Anything Google Maps knows)</label>
       <textarea id="user_input_topic">wine tasting</textarea>
     <br />
       <label for="user_input_mode">Mode of Transport</label>
+      <br />
       <select id="user_input_mode">
           <option value="walking">Walking</option>
           <option value="driving">Driving</option>
@@ -98,9 +99,9 @@
         <dd>
             <label for="patience">Max Search Results</label>
             <br />
-            <input type="range" id="patience" name="seconds" min="1" max="3">
+            <label>20-40-60 : each notch adds ~2 seconds)</label>
             <br />
-            <label>(20, 40, 60 : each notch adds ~2 seconds)</label>
+            <input type="range" id="patience" name="seconds" min="1" max="3">
             <br />
             <label>Customize Cluster Choice Metric</label>
             <label>(Relative Importance)</label>
@@ -114,20 +115,17 @@
           <label for="p_rating">Ratings</label>
           <br />
           <input type="range" id="p_rating" name="seconds" min="1" max="8" value="2">
-          
-        <br />
-        <label for="p_min_dist">Short Distance to First Stop</label>
-        <br />
+          <br />
+          <label for="p_min_dist">Short Distance to First Stop</label>
+          <br />
           <input type="range" id="p_min_dist" name="seconds" min="1" max="8" value="2">
           <br />
           <label for="p_internal_dist">Internal Distance within Cluster</label>
           <br />  
         <input type="range" id="p_internal_dist" name="seconds" min="1" max="8" value="3">
-          
-        <br />
+          <br />
         </dd>
-    </dl>
-  <br />
+      </dl>
             </div>
         <div class="col-md-2">
             <button class="button button2" id="click_button">Compute!<br />(~5 sec max)</button>
