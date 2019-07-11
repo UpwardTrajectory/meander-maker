@@ -39,6 +39,10 @@ It's time for an urban themed walk! Perhaps you'd like to efficiently visit the 
    
 5. You *can* already do this in Google Maps, but it this process requires knowing the names of the individual stops AND the order you would like to traverse them in before the route can be generated. Meander-Maker automates all of that.
 ![example.png](https://github.com/UpwardTrajectory/meander-maker/blob/master/readme_example.png?raw=true)
+
+But Meander-Maker will do something like this:
+![clusters of wine rooms](https://github.com/UpwardTrajectory/meander-maker/blob/master/readme_clusters.png?raw=true)  
+And find the best cluster, then return turn-by-turn directions.
  
 ### To Do:
  * Allow "veto" of individual locations, then re-build the path
