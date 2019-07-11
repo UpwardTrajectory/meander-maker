@@ -27,13 +27,14 @@
         cursor: pointer;
       }
       .button2 {
-        background-color: white; 
+        background-color: #008CBA; 
         color: black; 
-        border: 2px solid #008CBA;
+        border: 2px solid white;
       }
       .button2:hover {
-        background-color: #008CBA;
-        color: white;
+        background-color: white;
+        color: #008CBA;
+        border: 2px solid white;
       }
     div.yellow {
       background-color: yellow;
@@ -75,10 +76,10 @@
                   req.send(data)
               document["click_button"].bind("click", get_output)
             </script>
-    <label for="user_input_loc">Starting Location (specific is better than general)</label>
+    <label for="user_input_loc">Starting Location (specific > general)</label>
       <textarea id="user_input_loc">Hôtel Ampère Paris</textarea>
     <br />
-      <label for="user_input_topic">Topic (Anything Google Maps can return results for)</label>
+      <label for="user_input_topic">Topic<br />(Anything Google Maps knows)</label>
       <textarea id="user_input_topic">wine tasting</textarea>
     <br />
       <label for="user_input_mode">Mode of Transport</label>
@@ -89,16 +90,18 @@
           <option value="transit">Public Transit</option>
       </select>
     <br />
-      <label for="patience">Max Search Results</label>
-      <br />
-      <input type="range" id="patience" name="seconds" min="1" max="3">
-      <br />
-      <label>(20, 40, 60 : each notch adds ~2 seconds)</label>
+      
         
     <dl>
       <dt>Advanced Tuning</dt>
       <br />
         <dd>
+            <label for="patience">Max Search Results</label>
+            <br />
+            <input type="range" id="patience" name="seconds" min="1" max="3">
+            <br />
+            <label>(20, 40, 60 : each notch adds ~2 seconds)</label>
+            <br />
             <label>(Relative Importance)</label>
           <br />
             <label>Lower -------- Higher</label>
