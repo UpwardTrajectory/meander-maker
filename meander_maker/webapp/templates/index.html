@@ -65,7 +65,10 @@
     <br />
       <label for="patience">Max Search Results (page loads in groups of 20, adds 2 seconds of wait time)</label>
         <input type="range" id="patience" name="seconds" min="1" max="3">
-    <br />
+    <dl>
+      <dt>Advanced Tuning</dt>
+      <dd>
+        <br />
       <label for="p_size">Variety</label>
         <input type="range" id="p_size" name="seconds" min="1" max="8">
     <br />
@@ -73,11 +76,14 @@
         <input type="range" id="p_rating" name="seconds" min="1" max="8">
     <br />
       <label for="p_min_dist">Short Distance to First Stop</label>
-        <input type="range" id="p_min_dist" name="seconds" min="1" max="8">
+        <input type="range" id="p_min_dist" name="seconds" min="1" max="8" >
     <br />
       <label for="p_internal_dist">Internal Distance within Cluster</label>
         <input type="range" id="p_internal_dist" name="seconds" min="1" max="8">
-    <br />
+    
+  </dd>
+  </dl>
+  <br />
     <button id="click_button">Compute! (may take several seconds)</button>
     <br />
     <h1>User Output</h1>
