@@ -16,7 +16,9 @@
     }
   </style>
   <body id="page-top" onload="brython(1)">
-    <h1>User Input</h1>
+    <div class="row">
+        <div class="column">
+      <h1>User Input</h1>
     <script type="text/python3">
       from browser import document, ajax
       import json
@@ -81,6 +83,10 @@
     <h1>User Output</h1>
     <!--try replacing yellow with div to remove the yellow styling-->
     <div class="yellow" id="places"></div>
+            </div>
+        <div class="column">
     <div class="yellow" id="result"></div>
-  </body>
+            </div>
+  </div>
+    </body>
 </html>

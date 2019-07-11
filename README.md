@@ -1,5 +1,9 @@
 # Meander Maker
 
+### [meander.datakaspar.com](meander.datakaspar.com)
+
+[Slideshow Presentation](https://docs.google.com/presentation/d/1FJpiMcubybSbuHfuLMKDdqAZSo0YrzePHE2okCvVc_4/edit?usp=sharing)
+
 It's time for an urban themed walk! Perhaps you'd like to efficiently visit the nearest 4 bookstores, or build an itinerary for winetasting through a cluster of walkable tasting rooms. Of course there's always the good old-fashioned pub crawl. Anything is possible with Meander Maker!
 
 ### What you bring to the game:
