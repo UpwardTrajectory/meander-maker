@@ -47,6 +47,7 @@ And find the best cluster, then also return turn-by-turn directions.
  
 ### To Do:
  * Allow "veto" of individual locations, then re-build the path
+ * Fix "Geo-locate" so that it will find the location the front-end client, instead of the AWS server
  * Preferred Length of your Adventure
    * accept multiple input restrictions, with sensible defaults
      * Number of stops (N=4)
